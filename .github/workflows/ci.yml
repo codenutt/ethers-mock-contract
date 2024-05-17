@@ -1,0 +1,57 @@
+name: "CI"
+
+on:
+  workflow_dispatch:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - "main"
+
+jobs:
+  ci:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: true
+
+      - name: Lint commits - PR
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
+        if: github.event_name == 'pull_request'
+
+      - name: Lint commits - Push
+        run: echo "$(git log -1 --format='%s')" | npx commitlint
+        if: github.event_name != 'pull_request'
+
+      - name: Lint
+        run: cd core && pnpm lint
+
+      - name: Formatting
+        run: npm run format
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Publish Release
+        run: cd core && npx semantic-release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

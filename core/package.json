@@ -10,8 +10,12 @@
     "build:types": "tsc -p tsconfig.types.json",
     "build:js": "pnpm build:esm && pnpm build:cjs && pnpm build:types",
     "build": "pnpm clean && pnpm build:contract && pnpm build:js",
-    "lint": "eslint . && solhint '**/*.sol'",
+    "lint": "eslint && solhint '**/*.sol'",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/codenutt/ethers-mock-contract.git"
   },
   "type": "module",
   "exports": {
@@ -21,6 +25,9 @@
       "import": "./build/esm/index.js",
       "default": "./build/cjs/index.cjs"
     }
+  },
+  "engines": {
+    "node": ">=20"
   },
   "main": "build/cjs/index.cjs",
   "types": "build/types/index.d.ts",
@@ -36,11 +43,79 @@
     "ethers": "^6"
   },
   "devDependencies": {
+    "@semantic-release/commit-analyzer": "^12.0.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/npm": "^12.0.0",
+    "@semantic-release/release-notes-generator": "^12.1.0",
+    "conventional-changelog-conventionalcommits": "^7.0.2",
     "ethers": "^6.12.1",
     "rimraf": "^5.0.7",
+    "semantic-release": "^23.1.1",
     "solc": "^0.8.25",
     "solhint": "^5.0.0",
     "tsx": "^4.7.1",
     "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "tag": "latest"
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "conventionalcommits",
+          "releaseRules": [
+            {
+              "type": "docs",
+              "release": "patch"
+            },
+            {
+              "type": "refactor",
+              "release": "patch"
+            },
+            {
+              "type": "style",
+              "release": "patch"
+            },
+            {
+              "type": "chore",
+              "release": "patch"
+            }
+          ],
+          "parserOpts": {
+            "noteKeywords": [
+              "BREAKING CHANGE",
+              "BREAKING CHANGES",
+              "BREAKING"
+            ]
+          }
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "conventionalcommits",
+          "parserOpts": {
+            "noteKeywords": [
+              "BREAKING CHANGE",
+              "BREAKING CHANGES",
+              "BREAKING"
+            ]
+          }
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": true
+        }
+      ],
+      "@semantic-release/github"
+    ]
   }
 }
