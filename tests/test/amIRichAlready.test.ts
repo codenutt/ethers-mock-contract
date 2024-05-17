@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import { BaseContract, Signer, parseEther } from "ethers";
-import { deployMockContract, MockContract } from "../src/index.js";
+import { deployMockContract, MockContract } from "ethers-mock-contract";
 import hre from "hardhat";
-import { AmIRichAlready__factory } from "../typechain-types/factories/tests/AmIRichAlready.sol/AmIRichAlready__factory";
-import { AmIRichAlready } from "../typechain-types/tests/AmIRichAlready.sol/AmIRichAlready";
+import { AmIRichAlready__factory } from "../typechain-types/factories/AmIRichAlready.sol/AmIRichAlready__factory";
+import { AmIRichAlready } from "../typechain-types/AmIRichAlready.sol/AmIRichAlready";
 
-import IERC20Artifact from "../artifacts/contracts/tests/AmIRichAlready.sol/IERC20.json";
+import IERC20Artifact from "../artifacts/contracts/AmIRichAlready.sol/IERC20.json";
 
 describe("Am I Rich Already", () => {
   let sender: Signer;

@@ -1,19 +1,18 @@
 import { expect } from "chai";
-import { Contract, Signer } from "ethers";
+import { Contract, ContractFactory, Signer } from "ethers";
 
-import { Doppelganger__factory } from "../ethers-mock-contract/typechain-types/factories/Doppelganger__factory";
-import { Counter__factory } from "../ethers-mock-contract/typechain-types/factories/tests/Counter__factory";
-import { CounterOverloaded__factory } from "../ethers-mock-contract/typechain-types/factories/tests/CounterOverload.sol/CounterOverloaded__factory";
+import { Doppelganger } from "ethers-mock-contract";
+import { Counter__factory } from "../typechain-types/factories/Counter__factory";
+import { CounterOverloaded__factory } from "../typechain-types/factories/CounterOverload.sol/CounterOverloaded__factory";
 
 import hre from "hardhat";
-import { Counter } from "../ethers-mock-contract/typechain-types/tests/Counter";
-import { CounterOverloaded } from "../ethers-mock-contract/typechain-types/tests/CounterOverload.sol/CounterOverloaded";
-import { Doppelganger } from "../ethers-mock-contract/typechain-types/Doppelganger";
+import { Counter } from "../typechain-types/Counter";
+import { CounterOverloaded } from "../typechain-types/CounterOverload.sol/CounterOverloaded";
 
 describe("Doppelganger - Contract", () => {
   describe("mocking mechanism", () => {
     let sender: Signer;
-    let contract: Doppelganger;
+    let contract: Contract;
     let pretender: Counter;
     let pretenderOverloaded: CounterOverloaded;
 
@@ -22,7 +21,8 @@ describe("Doppelganger - Contract", () => {
     beforeEach(async () => {
       [sender] = await hre.ethers.getSigners();
 
-      contract = await new Doppelganger__factory(sender).deploy();
+      const factory = new ContractFactory(Doppelganger.abi, Doppelganger.evm.bytecode.object, sender);
+      contract = (await factory.deploy()) as unknown as Contract;
 
       pretender = new Contract(await contract.getAddress(), Counter__factory.abi, sender) as unknown as Counter;
       pretenderOverloaded = new Contract(
@@ -132,12 +132,14 @@ describe("Doppelganger - Contract", () => {
 
   describe("call mechanisms", () => {
     let sender: Signer;
-    let doppelganger: Doppelganger;
+    let doppelganger: Contract;
     let counter: Counter;
 
     beforeEach(async () => {
       [sender] = await hre.ethers.getSigners();
-      doppelganger = await new Doppelganger__factory(sender).deploy();
+
+      const factory = new ContractFactory(Doppelganger.abi, Doppelganger.evm.bytecode.object, sender);
+      doppelganger = (await factory.deploy()) as unknown as Contract;
       counter = await new Counter__factory(sender).deploy();
     });
 

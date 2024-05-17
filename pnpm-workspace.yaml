@@ -1,3 +1,5 @@
 packages:
   - core
-  - core-tests
+  - tests
+  - tests-esm
+  - tests-cjs

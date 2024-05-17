@@ -1,4 +1,4 @@
 {
-  "cSpell.words": ["keccak", "mload", "nomicfoundation", "typechain"],
+  "cSpell.words": ["commitlint", "conventionalcommits", "keccak", "mload", "nomicfoundation", "solhint", "typechain"],
   "editor.formatOnSave": true
 }

@@ -12,7 +12,8 @@ import {
   Signer,
 } from "ethers";
 
-import DoppelgangerContract from "../artifacts/contracts/Doppelganger.sol/Doppelganger.json";
+import { Doppelganger } from "./Doppelganger.js";
+export { Doppelganger };
 
 type ABI = string | Array<Fragment | JsonFragment | string>;
 
@@ -46,7 +47,13 @@ type GetFnType<T extends TypeChainContract> = T["interface"]["getFunction"];
 
 type GetFnParamsType<T extends TypeChainContract> = Parameters<GetFnType<T>>[0];
 
-export interface MockContract<T extends BaseContract> extends MockContractExtension {
+type ContractToMock = {
+  interface: {
+    getFunction(nameOrSignature: string): any;
+  };
+};
+
+export interface MockContract<T extends ContractToMock> extends MockContractExtension {
   mock: {
     [key in "receive" | GetFnParamsType<T>]: StubInterface;
   };
@@ -172,21 +179,22 @@ async function deploy(signer: Signer, options?: DeployOptions) {
         `${address} already contains a contract. ` + "If you want to override it, set the override parameter."
       );
     }
-    if ((provider as any)._hardhatNetwork) {
-      if (await provider.send("hardhat_setCode", [address, DoppelgangerContract.deployedBytecode])) {
-        return new Contract(address, DoppelgangerContract.abi, signer);
+    if ((provider as any)._hardhatNetwork || (provider as any)._networkName === "hardhat") {
+      if (await provider.send("hardhat_setCode", [address, `0x${Doppelganger.evm.deployedBytecode.object}`])) {
+        return new Contract(address, Doppelganger.abi, signer);
       } else throw new Error(`Couldn't deploy at ${address}`);
     } else {
-      if (await provider.send("evm_setAccountCode", [address, DoppelgangerContract.deployedBytecode])) {
-        return new Contract(address, DoppelgangerContract.abi, signer);
+      if (await provider.send("evm_setAccountCode", [address, `0x${Doppelganger.evm.deployedBytecode.object}`])) {
+        return new Contract(address, Doppelganger.abi, signer);
       } else throw new Error(`Couldn't deploy at ${address}`);
     }
   }
-  const factory = new ContractFactory(DoppelgangerContract.abi, DoppelgangerContract.bytecode, signer);
+  const factory = new ContractFactory(Doppelganger.abi, `0x${Doppelganger.evm.bytecode.object}`, signer);
+
   return factory.deploy();
 }
 
-function createMock<T extends Contract>(abi: ABI, mockContractInstance: Contract): MockContract<T>["mock"] {
+function createMock<T extends ContractToMock>(abi: ABI, mockContractInstance: Contract): MockContract<T>["mock"] {
   const contractInterface = new Interface(abi);
   const encoder = new AbiCoder();
 
@@ -212,7 +220,7 @@ function createMock<T extends Contract>(abi: ABI, mockContractInstance: Contract
   return mockedAbi;
 }
 
-export async function deployMockContract<T extends Contract = Contract>(
+export async function deployMockContract<T extends ContractToMock>(
   signer: Signer,
   abi: ABI,
   options?: DeployOptions
@@ -237,7 +245,9 @@ export async function deployMockContract<T extends Contract = Contract>(
     const tx = await contract.getFunction(functionName).populateTransaction(...params);
     const data = tx.data;
     let result;
-    const returnValue = await mockContractInstance.getFunction("__waffle__staticcall").call(contract.address, data);
+
+    const contractAddress = await contract.getAddress();
+    const returnValue = await (mockContractInstance as any).__waffle__staticcall(contractAddress, data);
     result = encoder.decode(func.outputs, returnValue);
     if (result.length === 1) {
       result = result[0];
@@ -248,7 +258,8 @@ export async function deployMockContract<T extends Contract = Contract>(
   mockedContract.call = async (contract: Contract, functionName: string, ...params: any[]) => {
     const tx = await contract.getFunction(functionName).populateTransaction(...params);
     const data = tx.data;
-    return mockContractInstance.getFunction("__waffle__call").call(contract.address, data);
+    const contractAddress = await contract.getAddress();
+    return (mockContractInstance as any).__waffle__call(contractAddress, data);
   };
 
   return mockedContract;

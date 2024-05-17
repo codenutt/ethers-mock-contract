@@ -1,10 +1,46 @@
 {
-  "name": "ethereum-mock-contract",
+  "name": "ethers-mock-contract",
   "version": "1.0.0",
   "description": "",
   "scripts": {
+    "clean": "rimraf build",
+    "build:contract": "node ./build.js",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && mv build/cjs/index.js build/cjs/index.cjs && mv build/cjs/Doppelganger.js build/cjs/Doppelganger.cjs && sed -i 's/Doppelganger\\.js/Doppelganger\\.cjs/' build/cjs/index.cjs ",
+    "build:types": "tsc -p tsconfig.types.json",
+    "build:js": "pnpm build:esm && pnpm build:cjs && pnpm build:types",
+    "build": "pnpm clean && pnpm build:contract && pnpm build:js",
+    "lint": "eslint . && solhint '**/*.sol'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./build/types/index.d.ts",
+      "require": "./build/cjs/index.cjs",
+      "import": "./build/esm/index.js",
+      "default": "./build/cjs/index.cjs"
+    }
+  },
+  "main": "build/cjs/index.cjs",
+  "types": "build/types/index.d.ts",
+  "module": "build/esm/index.js",
+  "files": [
+    "package.json",
+    "build",
+    "src"
+  ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "peerDependencies": {
+    "ethers": "^6"
+  },
+  "devDependencies": {
+    "ethers": "^6.12.1",
+    "rimraf": "^5.0.7",
+    "solc": "^0.8.25",
+    "solhint": "^5.0.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
 }
